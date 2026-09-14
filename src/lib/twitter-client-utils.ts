@@ -538,7 +538,13 @@ export function mapTweetResult(
     return undefined;
   }
 
-  const text = extractTweetText(result);
+  // Retweets carry a truncated "RT @user: …" legacy.full_text; use the retweeted post's full text instead.
+  const retweeted = unwrapTweetResult(result.legacy?.retweeted_status_result?.result);
+  const retweetedText = retweeted ? extractTweetText(retweeted) : undefined;
+  const retweetedUser = retweeted?.core?.user_results?.result;
+  const retweetedUsername = retweetedUser?.legacy?.screen_name ?? retweetedUser?.core?.screen_name;
+  const text =
+    retweetedText && retweetedUsername ? `RT @${retweetedUsername}: ${retweetedText}` : extractTweetText(result);
   if (!text) {
     return undefined;
   }
@@ -669,6 +675,15 @@ export function collectTweetResultsFromEntry(entry: {
   return results;
 }
 
+/** Timeline ads arrive as ordinary tweet entries; X marks them via an entryId prefix or promotedMetadata. */
+function isPromotedEntry(entry: unknown): boolean {
+  const e = entry as { entryId?: unknown; content?: { itemContent?: { promotedMetadata?: unknown } } } | undefined;
+  if (typeof e?.entryId === 'string' && e.entryId.startsWith('promoted')) {
+    return true;
+  }
+  return Boolean(e?.content?.itemContent?.promotedMetadata);
+}
+
 export interface ParseTweetsOptions {
   quoteDepth: number;
   includeRaw?: boolean;
@@ -727,6 +742,9 @@ export function parseTweetsFromInstructions(
 
   for (const instruction of instructions ?? []) {
     for (const entry of instruction.entries ?? []) {
+      if (isPromotedEntry(entry)) {
+        continue;
+      }
       const results = collectTweetResultsFromEntry(entry);
       for (const result of results) {
         const mapped = mapTweetResult(result, { quoteDepth, includeRaw });

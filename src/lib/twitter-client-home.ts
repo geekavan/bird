@@ -77,7 +77,7 @@ export function withHome<TBase extends AbstractConstructor<TwitterClientBase>>(
         for (const queryId of queryIds) {
           const variables = {
             count: pageCount,
-            includePromotedContent: true,
+            includePromotedContent: false,
             latestControlAvailable: true,
             requestContext: 'launch',
             withCommunity: true,

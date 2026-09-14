@@ -34,6 +34,9 @@ export type GraphqlTweetResult = {
     favorite_count?: number;
     conversation_id_str?: string;
     in_reply_to_status_id_str?: string | null;
+    retweeted_status_result?: {
+      result?: GraphqlTweetResult;
+    };
     entities?: {
       media?: GraphqlMediaEntity[];
     };
