@@ -1,5 +1,45 @@
 # bird 🐦 — fast X CLI for tweeting, replying, and reading
 
+> ## ⚠️ Maintained fork — install from source only
+>
+> This is **geekavan/bird**, a self-maintained fork. The upstream project (`steipete/bird`) was removed from GitHub
+> and `@steipete/bird` is deprecated on npm. History is based on
+> [XARKUR/bird](https://github.com/XARKUR/bird) (upstream history up to 0.8.0, verified against an independent backup).
+>
+> **Do not** use `npm install -g @steipete/bird` or `brew install steipete/tap/bird` below — those install the
+> unmaintained upstream build without this fork's fixes. Install this fork from source:
+>
+> ```bash
+> git clone https://github.com/geekavan/bird.git && cd bird
+> git checkout nix-build
+> pnpm install --frozen-lockfile
+> pnpm run build:dist
+> pnpm test
+> node dist/cli.js --version        # should print 0.9.0 (<commit>)
+> node dist/cli.js home -n 3 --json # first run on macOS prompts Keychain for "Chrome Safe Storage"
+> ```
+>
+> Invoke it as `node /path/to/bird/dist/cli.js …` (a `bird` already on your PATH is probably the old upstream build).
+>
+> **Changes vs upstream 0.8.0**
+> - Ported: proper `x-client-transaction-id` (error 226 on tweet/reply, from zaydiscold/bird), 0.9.0 long posts
+>   via CreateNoteTweet, `x-client-transaction-id` ^0.3.1 (error 344, from 0xEnc0der/bird-x-cli).
+> - `graphql:update` now refreshes every operation in `FALLBACK_QUERY_IDS` (it silently skipped HomeTimeline,
+>   HomeLatestTimeline, UserTweets, UserArticlesTweets and List* operations).
+> - Retweets return the retweeted post's full text instead of the truncated `RT @user: …` (140 chars).
+> - Promoted (ad) entries are dropped from timelines; `home` no longer requests promoted content.
+> - Known broken: `whoami` (X no longer serves the account endpoints it relies on); reading commands are unaffected.
+>
+> **Maintenance** when X rotates GraphQL query IDs and reads start failing:
+> `pnpm graphql:update && pnpm run build:dist && pnpm test`, verify a live read, then commit and push.
+> Re-run `graphql:update` once if a bundle fetch fails transiently.
+>
+> **Security review (2026-09-14)**: no exfiltration found. Cookies are only sent to hard-coded `x.com`,
+> `api.twitter.com`, `twitter.com` and `upload.twitter.com` URLs; the cookie reader (`@steipete/sweet-cookie`) has no
+> network code and deletes its temporary cookie DB copy in `finally`. Re-review any future ported patch or
+> dependency upgrade, and keep installing with `--frozen-lockfile`.
+
+
 `bird` is a fast X CLI for tweeting, replying, and reading via X/Twitter GraphQL (cookie auth).
 
 ## Disclaimer
