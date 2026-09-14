@@ -7,32 +7,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const TARGET_OPERATIONS = [
-  'CreateTweet',
-  'CreateNoteTweet',
-  'CreateRetweet',
-  'DeleteRetweet',
-  'CreateFriendship',
-  'DestroyFriendship',
-  'FavoriteTweet',
-  'UnfavoriteTweet',
-  'CreateBookmark',
-  'DeleteBookmark',
-  'TweetDetail',
-  'SearchTimeline',
-  'Bookmarks',
-  'BookmarkFolderTimeline',
-  'Following',
-  'Followers',
-  'Likes',
-  'ExploreSidebar',
-  'ExplorePage',
-  'GenericTimelineById',
-  'TrendHistory',
-  'AboutAccountQuery',
-] as const;
+// Single source of truth: refresh every operation the client can call, so the list
+// cannot drift from FALLBACK_QUERY_IDS (it previously missed HomeTimeline,
+// HomeLatestTimeline, UserTweets and the List* operations).
+import { type OperationName, TARGET_QUERY_ID_OPERATIONS } from '../src/lib/twitter-client-constants.js';
 
-type OperationName = (typeof TARGET_OPERATIONS)[number];
+const TARGET_OPERATIONS: readonly OperationName[] = TARGET_QUERY_ID_OPERATIONS;
 
 const DISCOVERY_PAGES = [
   'https://x.com/?lang=en',
